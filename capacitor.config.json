@@ -1,0 +1,11 @@
+{
+  "appId": "com.cnmeta.app",
+  "appName": "CN META",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}
