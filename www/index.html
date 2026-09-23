@@ -2,13 +2,9 @@
 <!-- CN META — Stock Metadata Studio -->
 <html lang="en" data-theme="dark"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!--
-  CSP note: to allow any AI provider (Gemini, OpenRouter, OpenAI, Groq, Together, DeepSeek, LM Studio, Custom) connect-src is '*'.
-  The page only uses its own files, Google Fonts, and the AI APIs you configure.
--->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src blob:; connect-src *; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
-<meta name="description" content="CN META — generate stock photo titles, descriptions and keywords with multiple AI providers (Gemini, OpenRouter, OpenAI), download CSV and embed IPTC/XMP inside images. Batch-select many files at once.">
+<meta name="description" content="CN META — generate stock photo titles, descriptions and keywords with multiple AI providers, download CSV and embed IPTC/XMP inside images.">
 <meta name="theme-color" content="#070c1b">
 <title>CN META — Stock Metadata Studio</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2322d3ee'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='sans-serif' font-size='13' font-weight='800' fill='%2303222b'%3ECN%3C/text%3E%3C/svg%3E">
@@ -107,7 +103,6 @@ details.adv summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:
 .bar .grow{flex:1;min-width:180px;color:var(--muted)}
 .bar select{width:auto;padding:8px 10px}
 
-/* batch toolbar */
 .batchbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0 8px;padding:8px 12px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}
 .sel-all{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;font-weight:500;font-size:14px;position:relative}
 .sel-all input{position:absolute;opacity:0;width:1px;height:1px}
@@ -189,7 +184,7 @@ dialog li{margin:4px 0}
 <header class="top">
   <div class="brand">
     <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#22d3ee"></rect><text x="16" y="22" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="800" fill="#03222b">CN</text></svg>
-    <div><h1>CN META<span class="ver">v3.3</span></h1><p>Stock Metadata Studio — titles, keywords, CSV &amp; embed</p></div>
+    <div><h1>CN META<span class="ver">v3.4</span></h1><p>Stock Metadata Studio — titles, keywords, CSV &amp; embed</p></div>
   </div>
   <div class="topbtns">
     <button id="menuBtn" class="only-m accent" type="button">⚙ Settings</button>
@@ -261,13 +256,11 @@ Keywords={keywords}</textarea>
       <input type="range" id="delay" data-s="" min="0" max="15000" step="500" value="2000" aria-label="Delay">
       <div class="rangehead"><b>Max wait across all providers</b><output id="maxWaitOut">120 s</output></div>
       <input type="range" id="maxWait" data-s="" min="0" max="600" step="10" value="120" aria-label="Max wait">
-      <p class="hint">If any provider answers within this window the result is used; otherwise the item is marked "failed". Clicking "Regenerate" tries again.</p>
+      <p class="hint">If any provider answers within this window the result is used; otherwise the item is marked "failed".</p>
 
       <label class="l" for="zipMB">Max size per ZIP part</label>
       <select id="zipMB" data-s=""><option value="100">100 MB</option><option value="300" selected="">300 MB</option><option value="600">600 MB</option><option value="1000">1 GB</option></select>
-      <p class="hint">With many images the output is split into multiple ZIPs to save device memory.</p>
       <label class="sw"><span>UTF-8 BOM in CSV (for Excel)</span><input type="checkbox" id="bom" data-s=""><i></i></label>
-      <p class="hint">Keep it off for platform uploads — that's the safe default.</p>
     </details>
   </aside>
 
@@ -276,15 +269,14 @@ Keywords={keywords}</textarea>
       <label class="drop" id="drop" for="file">
         <input type="file" id="file" class="sr" multiple accept=".jpg,.jpeg,.png,.webp,.svg,.mp4,.mov,.webm,.m4v,image/jpeg,image/png,image/webp,image/svg+xml,video/*">
         <strong>Drop images &amp; videos here, or tap/click to choose (multiple allowed)</strong>
-        <small>JPG, PNG, WEBP — both CSV and embed. SVG and video (MP4/MOV/WEBM) — CSV only. EPS/AI not supported. Up to 500 files.</small>
+        <small>JPG, PNG, WEBP — both CSV and embed. SVG and video (MP4/MOV/WEBM) — CSV only. Up to 500 files.</small>
       </label>
 
       <div class="addbar">
         <button id="batchPickBtn" class="accent" type="button" title="Pick many images/videos at once">🗂 Batch select files</button>
-        <span class="hint">Select any number of images/videos at once. To add more later, click the box above or drop more files — the list is preserved.</span>
+        <span class="hint" id="pickHint">Select any number of images/videos at once. Click again to add more — the list is preserved.</span>
       </div>
 
-      <!-- Hidden multi-file picker used by the Batch select button -->
       <input type="file" id="fileMore" class="sr" multiple accept=".jpg,.jpeg,.png,.webp,.svg,.mp4,.mov,.webm,.m4v,image/jpeg,image/png,image/webp,image/svg+xml,video/*">
 
       <div class="bar">
@@ -304,7 +296,6 @@ Keywords={keywords}</textarea>
       </div>
       <div class="progress" aria-hidden="true"><i id="prog" style="width: 0px;"></i></div>
 
-      <!-- Batch toolbar (hidden until there are items) -->
       <div class="batchbar" id="batchBar" hidden>
         <label class="sel-all">
           <input type="checkbox" id="selAll">
@@ -324,7 +315,6 @@ Keywords={keywords}</textarea>
   </main>
 </div>
 
-<!-- AI Provider Dialog -->
 <dialog id="keyDlg" aria-labelledby="keyDlgT">
   <h2 id="keyDlgT">AI Provider Settings</h2>
   <p class="hint">Enabled providers are tried top to bottom. If all keys/models of one provider fail, the next provider is used. Only when everything fails is the item marked "failed".</p>
@@ -343,20 +333,18 @@ Keywords={keywords}</textarea>
   <ol>
     <li>Tap "AI providers" and add an API key for at least one provider (Gemini / OpenRouter / OpenAI / Custom).</li>
     <li>Add more providers or multiple keys per provider — if one fails, the next is tried automatically.</li>
-    <li>Choose a platform (this determines the CSV format), then adjust title/keyword settings.</li>
-    <li>Add images/videos by drag &amp; drop onto the box, by clicking the box, or by using "Batch select files". You can select many at once and repeat as often as you like.</li>
+    <li>Choose a platform, then adjust title/keyword settings.</li>
+    <li>Add images/videos by drag &amp; drop onto the box, by clicking the box, or by "Batch select files".</li>
     <li>Use the checkbox on each thumbnail to select items, <b>Shift+click</b> for a range, or tick "Select all".</li>
-    <li>Press "Generate metadata". You can edit each title/keyword yourself afterwards.</li>
-    <li>For a failed item, press "Regenerate" — it will retry across all providers. Use "Regenerate selected" to redo many at once.</li>
-    <li>Export with "Download CSV" or "Embedded images (ZIP)".</li>
+    <li>Press "Generate metadata". Edit titles/keywords yourself afterwards.</li>
+    <li>For a failed item, press "Regenerate". Use "Regenerate selected" to redo many at once.</li>
+    <li>Export with "Download CSV" or "Embedded images (ZIP)". On Android, the system Share Sheet will open — choose "Files" or "Downloads" to save, or share to any app.</li>
   </ol>
   <ul>
     <li><b>Google Gemini:</b> free key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.</li>
     <li><b>OpenRouter:</b> <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a> — many free vision models.</li>
     <li><b>OpenAI:</b> <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys</a>.</li>
-    <li><b>Custom:</b> any OpenAI-compatible endpoint (Groq, Together, DeepSeek, LM Studio, OpenRouter proxy, etc.) — just set the Base URL.</li>
-    <li><b>Adobe Stock:</b> after uploading in the Contributor Portal, use "Upload CSV".</li>
-    <li><b>Freepik (Magnific):</b> semicolon-separated CSV — File name; Title; Keywords.</li>
+    <li><b>Custom:</b> any OpenAI-compatible endpoint (Groq, Together, DeepSeek, LM Studio, etc.).</li>
     <li>Embedding writes title, description and keywords inside the JPEG as IPTC and XMP. PNG/WEBP are converted to JPG during embedding.</li>
   </ul>
   <div class="dbtns"><button id="helpClose" class="primary" type="button">OK</button></div>
@@ -378,7 +366,6 @@ const ADOBE_CATS = ['Animals','Buildings and Architecture','Business','Drinks','
 const SS_CATS = ['Abstract','Animals/Wildlife','Arts','Backgrounds/Textures','Beauty/Fashion','Buildings/Landmarks','Business/Finance','Celebrities','Education','Food and drink','Healthcare/Medical','Holidays','Industrial','Interiors','Miscellaneous','Nature','Objects','Parks/Outdoor','People','Religion','Science','Signs/Symbols','Sports/Recreation','Technology','Transportation','Vintage'];
 const canonCats = arr => { const out = []; for (const c of (arr || [])){ const m = SS_CATS.find(x => x.toLowerCase() === String(c).trim().toLowerCase()); if (m && !out.includes(m)) out.push(m); } return out.slice(0, 2); };
 
-/* IPTC + XMP embedding */
 function clipBytes(s, max){
   s = String(s).replace(CTRL, '');
   const b = enc.encode(s); if (b.length <= max) return b;
@@ -491,7 +478,6 @@ class Zip{
   }
 }
 
-/* ---- Platform & CSV ---- */
 const PLATFORMS = {
   adobe: { label: 'Adobe Stock', delim: ',', maxKw: 49, maxTitle: 200,
     hint: 'Adobe: title up to 200 characters, up to 49 keywords. Category (1–21) is written to the CSV.',
@@ -599,6 +585,13 @@ function toast(msg, kind = 'info', ms = 4500){
   setTimeout(() => t.remove(), ms);
 }
 
+/* ---------- Platform / WebView detection ---------- */
+const IS_ANDROID_WEBVIEW = /wv|WebView|Version\/[\d.]+.*Chrome\/\d+ Mobile/i.test(navigator.userAgent)
+  || (typeof window.Android !== 'undefined')
+  || (navigator.userAgent.indexOf('; wv)') > -1);
+const HAS_DIR_PICKER = (typeof window.showDirectoryPicker === 'function') && !IS_ANDROID_WEBVIEW;
+const HAS_SHARE = !!(navigator.canShare && typeof File !== 'undefined');
+
 /* ---------- Provider definitions ---------- */
 const PROVIDERS = [
   { id: 'gemini', label: 'Google Gemini', kind: 'gemini',
@@ -618,7 +611,7 @@ const PROVIDERS = [
     needsBase: false, defaultBase: 'https://api.openai.com/v1', enabledByDefault: false },
   { id: 'custom', label: 'Custom (OpenAI-compatible)', kind: 'openai',
     keyUrl: '', keyUrlLabel: '',
-    keyHint: 'Groq, Together, DeepSeek, LM Studio, Ollama (OpenAI mode), etc. Just set the Base URL and key.',
+    keyHint: 'Groq, Together, DeepSeek, LM Studio, Ollama (OpenAI mode), etc.',
     defaultModels: '',
     needsBase: true, defaultBase: '', enabledByDefault: false }
 ];
@@ -1329,7 +1322,7 @@ function summary(){
 function setBusy(b){ $('#genBtn').disabled = b; $('#stopBtn').disabled = !b; updateBatchBar(); }
 function setExporting(b){ exporting = b; ['csvBtn', 'zipBtn', 'dirBtn'].forEach(id => $('#' + id).disabled = b); }
 
-/* ---------- File inputs: main drop zone + batch picker ---------- */
+/* ---------- File inputs ---------- */
 const drop = $('#drop');
 ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
@@ -1337,7 +1330,6 @@ drop.addEventListener('drop', e => addFiles(e.dataTransfer.files));
 ['dragover', 'drop'].forEach(ev => window.addEventListener(ev, e => e.preventDefault()));
 $('#file').addEventListener('change', e => { addFiles([...e.target.files]); e.target.value = ''; });
 
-// "Batch select files" — opens a multi-file picker; existing list is preserved
 $('#batchPickBtn').onclick = () => $('#fileMore').click();
 $('#fileMore').addEventListener('change', e => { addFiles([...e.target.files]); e.target.value = ''; });
 
@@ -1444,19 +1436,76 @@ async function runAll(){
   toast(stopFlag ? 'Stopped.' : (fails ? `Done. ${fails} failed — click "Regenerate" to retry with all providers.` : 'All done ✓'), fails ? 'warn' : 'ok');
 }
 
-/* ---------- Export ---------- */
-function saveBlob(blob, name){
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
-  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+/* ============================================================
+   ROBUST SAVE — works on desktop Chrome AND Android WebView/APK
+   Order of attempts:
+     1) Web Share API (navigator.share with files) → Android Share Sheet
+     2) Classic <a download> (desktop Chrome / Firefox / Edge)
+     3) data: URL download (some WebViews)
+     4) Open in new tab (long-press to save)
+   ============================================================ */
+async function saveBlob(blob, name){
+  // 1) Android / iOS Web Share API
+  if (HAS_SHARE){
+    try{
+      const file = new File([blob], name, { type: blob.type || 'application/octet-stream' });
+      if (navigator.canShare({ files: [file] })){
+        await navigator.share({ files: [file], title: name });
+        return true;
+      }
+    }catch(e){
+      if (e && e.name === 'AbortError') return true; // user cancelled → treat as done
+      // else fall through
+    }
+  }
+
+  // 2) Classic anchor download
+  try{
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+    return true;
+  }catch(e){ /* fall through */ }
+
+  // 3) data: URL download
+  try{
+    const dataUrl = await new Promise((res, rej) => {
+      const fr = new FileReader();
+      fr.onload = () => res(fr.result);
+      fr.onerror = () => rej(new Error('read failed'));
+      fr.readAsDataURL(blob);
+    });
+    const a = document.createElement('a');
+    a.href = dataUrl; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    return true;
+  }catch(e){ /* fall through */ }
+
+  // 4) Open in new tab
+  try{
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, '_blank');
+    if (w){ setTimeout(() => URL.revokeObjectURL(url), 60000); return true; }
+  }catch(e){ /* fall through */ }
+
+  throw new Error('Download blocked by WebView. Long-press the link or use Share.');
 }
-$('#csvBtn').onclick = () => {
+
+/* ---------- Export ---------- */
+$('#csvBtn').onclick = async () => {
   const done = items.filter(i => i.status === 'done' && i.title);
   if (!done.length) return toast('No metadata generated yet.', 'warn');
   const s = getSettings();
   if (s.platform === 'custom' && !parseTpl(s.csvTpl).length) return toast('Add at least one "Header=value" line to the Custom template.', 'warn');
   const csv = (s.bom ? '\uFEFF' : '') + buildCsv(done, s, outNames(done, $('#csvName').value));
-  saveBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), s.platform + '_metadata.csv');
-  toast(`CSV created for ${done.length} file${done.length === 1 ? '' : 's'}.`, 'ok');
+  try{
+    await saveBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), s.platform + '_metadata.csv');
+    toast(`CSV ready: ${done.length} file${done.length === 1 ? '' : 's'}.`, 'ok');
+  }catch(e){
+    toast('Could not save CSV: ' + e.message, 'err', 9000);
+  }
 };
 
 async function buildEmbedded(it){
@@ -1501,14 +1550,25 @@ $('#zipBtn').onclick = async () => {
       if (n % 5 === 0) await sleep(0);
     }
     if (zip.count) blobs.push(zip.blob());
-    blobs.forEach((b, i) => setTimeout(() => saveBlob(b, blobs.length > 1 ? `embedded_images_part${i + 1}.zip` : 'embedded_images.zip'), i * 800));
-    toast(blobs.length ? `${d.length - failed.length} image(s) written into ${blobs.length} ZIP file${blobs.length === 1 ? '' : 's'}.` : 'No images could be embedded.', blobs.length ? 'ok' : 'err');
+    let saved = 0;
+    for (let i = 0; i < blobs.length; i++){
+      const fname = blobs.length > 1 ? `embedded_images_part${i + 1}.zip` : 'embedded_images.zip';
+      try{
+        await saveBlob(blobs[i], fname);
+        saved++;
+        if (blobs.length > 1) await sleep(800);
+      }catch(e){
+        toast('Could not save ' + fname + ': ' + e.message, 'err', 9000);
+      }
+    }
+    toast(saved ? `${d.length - failed.length} image(s) written into ${saved} ZIP file${saved === 1 ? '' : 's'}.` : 'Nothing was saved.', saved ? 'ok' : 'err');
     if (failed.length) toast(`${failed.length} failed: ` + failed.slice(0, 3).join('; '), 'err', 9000);
   }catch(e){ toast('Problem: ' + e.message, 'err', 8000); }
   setExporting(false); summary();
 };
 $('#dirBtn').onclick = async () => {
   if (running || exporting) return;
+  if (!HAS_DIR_PICKER) return toast('Folder saving is not available in this app. Use "Embedded images (ZIP)" instead — it will open the Share Sheet.', 'warn', 7000);
   const d = embeddable(); if (!d.length) return;
   let dir;
   try{ dir = await window.showDirectoryPicker({ mode: 'readwrite' }); }catch(e){ if (e.name !== 'AbortError') toast('Could not open folder: ' + e.message, 'err'); return; }
@@ -1530,7 +1590,13 @@ $('#dirBtn').onclick = async () => {
 };
 
 /* ---------- Init ---------- */
-if (window.showDirectoryPicker) $('#dirBtn').hidden = false;
+if (!HAS_DIR_PICKER) {
+  $('#dirBtn').hidden = true;
+}
+if (IS_ANDROID_WEBVIEW) {
+  const h = $('#pickHint');
+  if (h) h.innerHTML = '<b>WebView detected:</b> your system may allow only one file per pick. Tap <b>Batch select files</b> repeatedly — the list is preserved.';
+}
 $('#rememberKeys').checked = store.get('rememberKeys', true);
 updateKeyPill(); syncUI(); summary();
 </script>
